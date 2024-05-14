@@ -1,0 +1,14 @@
+WINDOWPOS
+keysym
+linalg
+printf
+println
+printfln
+eprintf
+eprintln
+eprintfln
+aprintf
+aprintln
+aprintfln
+WINDOWEVENT
+
