@@ -15,18 +15,10 @@ WINDOW_FLAGS :: SDL.WINDOW_SHOWN | SDL.WINDOW_RESIZABLE
 
 COLOR_WHITE :: SDL.Color{255, 255, 255, 255}
 
-TextId :: enum {
-	Title,
-	SubTitle,
-}
-
-Text :: struct {
-	texture: ^SDL.Texture,
-	dest:    SDL.Rect,
-}
-
 EntityId :: enum {
 	Player,
+	Title,
+	SubTitle,
 }
 
 Entity :: struct {
@@ -42,7 +34,6 @@ Game :: struct {
 	renderer:      ^SDL.Renderer,
 	font:          ^SDL_TTF.Font,
 	font_size:     i32,
-	texts:         [TextId]Text,
 	entities:      [EntityId]Entity,
 }
 
@@ -57,10 +48,8 @@ main :: proc() {
 	init_sdl()
 	defer clean_sdl()
 
+	create_text_entities()
 	create_player_entity()
-
-	game.texts[TextId.Title] = create_text("Testing", 3)
-	game.texts[TextId.SubTitle] = create_text("One, Two, Three")
 
 	event: SDL.Event
 
@@ -72,17 +61,6 @@ main :: proc() {
 
 			handle_events(&event)
 		}
-
-		title: Text = game.texts[TextId.Title]
-		title.dest.x = game.window_width / 2 - title.dest.w / 2
-		title.dest.y = game.window_height / 2 - title.dest.h
-		SDL.RenderCopy(game.renderer, title.texture, nil, &title.dest)
-
-		sub_title: Text = game.texts[TextId.SubTitle]
-		sub_title.dest.x = game.window_width / 2 - sub_title.dest.w / 2
-		sub_title.dest.y = game.window_height / 2 - sub_title.dest.h
-		SDL.RenderCopy(game.renderer, sub_title.texture, nil, &sub_title.dest)
-
 		draw_scene()
 	}
 }
@@ -158,15 +136,13 @@ draw_scene :: proc() {
 	SDL.RenderPresent(game.renderer)
 	SDL.SetRenderDrawColor(game.renderer, 0, 0, 0, 100)
 	SDL.RenderClear(game.renderer)
-	SDL.RenderCopy(
-		game.renderer,
-		game.entities[EntityId.Player].texture,
-		&game.entities[EntityId.Player].source,
-		&game.entities[EntityId.Player].destination,
-	)
+
+	for &entity in game.entities {
+		SDL.RenderCopy(game.renderer, entity.texture, &entity.source, &entity.destination)
+	}
 }
 
-create_text :: proc(str: cstring, scale: i32 = 1) -> Text {
+create_text :: proc(str: cstring, scale: i32 = 1) -> Entity {
 	surface := SDL_TTF.RenderText_Solid(game.font, str, COLOR_WHITE)
 	defer SDL.FreeSurface(surface)
 
@@ -178,7 +154,23 @@ create_text :: proc(str: cstring, scale: i32 = 1) -> Text {
 	dest_rect.w *= scale
 	dest_rect.h *= scale
 
-	return Text{texture = texture, dest = dest_rect}
+	// We return destination and source rects that match here.
+	// The caller should feel free to edit the destination rect, but leave
+	// the source rect alone.
+	return Entity{texture = texture, destination = dest_rect, source = dest_rect}
+}
+
+create_text_entities :: proc() {
+	title := create_text("Testing", 3)
+	title.destination.x = game.window_width / 2 - title.destination.w / 2
+	title.destination.y = game.window_height / 2 - title.destination.h
+
+	sub_title := create_text("One, Two, Three")
+	sub_title.destination.x = game.window_width / 2 - sub_title.destination.w / 2
+	sub_title.destination.y = game.window_height / 2 - sub_title.destination.h
+
+	game.entities[EntityId.Title] = title
+	game.entities[EntityId.SubTitle] = sub_title
 }
 
 create_player_entity :: proc() {
@@ -196,6 +188,7 @@ create_player_entity :: proc() {
 	horizontal_size: i32 = 16
 	vertical_size: i32 = 16
 
+	// TODO: figure out how the hell to animate this
 
 	source := SDL.Rect {
 		x = horizontal_padding,
