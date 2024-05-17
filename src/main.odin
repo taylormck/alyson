@@ -6,6 +6,7 @@ package main
 
 import "core:fmt"
 import "core:os"
+import "core:time"
 import SDL "vendor:sdl2"
 import SDL_Image "vendor:sdl2/image"
 import SDL_TTF "vendor:sdl2/ttf"
@@ -25,6 +26,22 @@ Entity :: struct {
 	destination: SDL.Rect,
 	source:      SDL.Rect,
 	texture:     ^SDL.Texture,
+	position:    [2]f32,
+}
+
+InputEventId :: enum {
+	move_left,
+	move_right,
+}
+
+InputEvent :: struct {
+	is_pressed:      bool,
+	is_just_pressed: bool,
+	value:           f32,
+}
+
+Input :: struct {
+	events: [InputEventId]InputEvent,
 }
 
 Game :: struct {
@@ -34,7 +51,10 @@ Game :: struct {
 	renderer:      ^SDL.Renderer,
 	font:          ^SDL_TTF.Font,
 	font_size:     i32,
+
+	// TODO: Should maybe separate in-game entities and UI entities
 	entities:      [EntityId]Entity,
+	input:         Input,
 }
 
 game := Game {
@@ -53,6 +73,9 @@ main :: proc() {
 
 	event: SDL.Event
 
+	prev_tick := time.tick_now()
+	counter: f32 = 0
+
 	game_loop: for {
 		for SDL.PollEvent(&event) {
 			if end_game(&event) {
@@ -61,7 +84,24 @@ main :: proc() {
 
 			handle_events(&event)
 		}
+
+		// Update our clock
+		new_tick := time.tick_now()
+		duration := time.tick_diff(prev_tick, new_tick)
+		prev_tick = new_tick
+		delta := f32(time.duration_seconds(duration))
+
+		counter += delta
+
+		// New keyboard events are handled above along with other events.
+		// However, this checks the current state of input devices, including
+		// reporting which keyboard buttons are being held.
+		check_input()
+
+		update_scene(delta)
 		draw_scene()
+
+		reset_input()
 	}
 }
 
@@ -130,6 +170,64 @@ handle_events :: proc(event: ^SDL.Event) {
 	if event.type != SDL.EventType.KEYDOWN && event.type != SDL.EventType.KEYUP {
 		return
 	}
+
+	#partial switch event.key.keysym.scancode {
+	case .LEFT:
+		game.input.events[InputEventId.move_left].is_just_pressed = true
+	case .RIGHT:
+		game.input.events[InputEventId.move_right].is_just_pressed = true
+	}
+}
+
+check_input :: proc() {
+	keyboard_state := SDL.GetKeyboardState(nil)
+	// NOTE: Is there a better way than just checking every action one-by-one ?
+	// TODO: Make the inputs configurable. That means saving the input config to file,
+	// then loading it when initializing the game. Finally, we'll need to add a menu
+	// so that users can configure it.
+	game.input.events[InputEventId.move_left].is_pressed =
+		keyboard_state[SDL.SCANCODE_LEFT] != 0 || keyboard_state[SDL.SCANCODE_A] != 0
+
+	// TODO: adjust for gamepad analog controls
+	if game.input.events[InputEventId.move_left].is_pressed {
+		game.input.events[InputEventId.move_left].value = 1
+	} else {
+		game.input.events[InputEventId.move_left].value = 0
+	}
+
+	game.input.events[InputEventId.move_right].is_pressed =
+		keyboard_state[SDL.SCANCODE_RIGHT] != 0 || keyboard_state[SDL.SCANCODE_D] != 0
+
+
+	// TODO: adjust for gamepad analog controls
+	if game.input.events[InputEventId.move_right].is_pressed {
+		game.input.events[InputEventId.move_right].value = 1
+	} else {
+		game.input.events[InputEventId.move_right].value = 0
+	}
+}
+
+reset_input :: proc() {
+	game.input.events[InputEventId.move_left].is_just_pressed = false
+	game.input.events[InputEventId.move_right].is_just_pressed = false
+}
+
+get_axis :: proc(left: f32, right: f32) -> f32 {
+	return right - left
+}
+
+update_scene :: proc(delta: f32) {
+	player_speed :: 300.0
+
+	player_horizontal_movement_input := get_axis(
+		game.input.events[.move_left].value,
+		game.input.events[.move_right].value,
+	)
+
+	game.entities[EntityId.Player].position.x +=
+		player_horizontal_movement_input * player_speed * delta
+
+	game.entities[EntityId.Player].destination.x = i32(game.entities[EntityId.Player].position.x)
 }
 
 draw_scene :: proc() {
@@ -182,6 +280,8 @@ create_player_entity :: proc() {
 		os.exit(1)
 	}
 
+	position := [2]f32{20.0, f32(game.window_width) / 2.0}
+
 	horizontal_padding: i32 = 7
 	vertical_padding: i32 = 16
 
@@ -211,6 +311,7 @@ create_player_entity :: proc() {
 		destination = destination,
 		source      = source,
 		texture     = texture,
+		position    = position,
 	}
 }
 

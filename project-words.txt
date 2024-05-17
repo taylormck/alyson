@@ -11,4 +11,5 @@ aprintf
 aprintln
 aprintfln
 WINDOWEVENT
+gamepad
 
