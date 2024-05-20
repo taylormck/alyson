@@ -37,6 +37,7 @@ init_game :: proc(game: ^Game) {
 
 update_game :: proc(game: ^Game, delta: f32) {
 	gravity :: 1000.0
+	jump_power :: 1000.0
 	bottom := f32(game.window_height) - 200.0
 
 	player_horizontal_movement_input := get_axis(
@@ -56,8 +57,11 @@ update_game :: proc(game: ^Game, delta: f32) {
 			bottom,
 		)
 		game.player.velocity.y += acceleration
+	} else if game.input.events[.jump].is_just_pressed {
+		game.player.velocity.y = -jump_power
+		game.player.position.y -= jump_power * delta
 	} else {
-		game.player.velocity.y = bottom
+		game.player.velocity.y = 0
 	}
 
 

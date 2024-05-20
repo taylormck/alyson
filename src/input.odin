@@ -5,6 +5,7 @@ import SDL "vendor:sdl2"
 InputEventId :: enum {
 	move_left,
 	move_right,
+	jump,
 }
 
 InputEvent :: struct {
@@ -23,7 +24,10 @@ handle_keyboard_event :: proc(input: ^Input, code: SDL.Scancode) {
 		input.events[InputEventId.move_left].is_just_pressed = true
 	case .RIGHT:
 		input.events[InputEventId.move_right].is_just_pressed = true
+	case .SPACE:
+		input.events[InputEventId.jump].is_just_pressed = true
 	}
+
 }
 
 check_input :: proc(input: ^Input) {
@@ -52,11 +56,14 @@ check_input :: proc(input: ^Input) {
 	} else {
 		input.events[InputEventId.move_right].value = 0
 	}
+
+	input.events[InputEventId.jump].is_pressed = keyboard_state[SDL.SCANCODE_SPACE] != 0
 }
 
 reset_input :: proc(input: ^Input) {
-	input.events[InputEventId.move_left].is_just_pressed = false
-	input.events[InputEventId.move_right].is_just_pressed = false
+	input.events[.move_left].is_just_pressed = false
+	input.events[.move_right].is_just_pressed = false
+	input.events[.jump].is_just_pressed = false
 }
 
 get_axis :: proc(left: f32, right: f32) -> f32 {
