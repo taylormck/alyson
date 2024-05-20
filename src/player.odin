@@ -20,7 +20,8 @@ create_player :: proc(game: ^Game) -> (player: Player) {
 		os.exit(1)
 	}
 
-	player.position = Vec2{20.0, f32(game.window_width) / 2.0}
+	player.position = Vec2{20.0, f32(game.window_height) / 2 - 100}
+	player.velocity = Vec2{0.0, -100.0}
 	player.sprite.texture = texture
 
 	horizontal_padding: i32 = 7
@@ -40,8 +41,8 @@ create_player :: proc(game: ^Game) -> (player: Player) {
 
 	// TODO: reduce the destination size to make the cat smaller later
 	player.sprite.destination = SDL.Rect {
-		x = 20,
-		y = game.window_height / 2 - 100,
+		x = 0,
+		y = 0,
 		w = 200,
 		h = 200,
 	}
