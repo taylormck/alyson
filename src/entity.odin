@@ -2,10 +2,13 @@ package main
 
 import SDL "vendor:sdl2"
 
+// NOTE: as of the time of writing, the order of the enum
+// determines the draw order. We should eventually switch to
+// something a bit more sane, eventually.
 EntityId :: enum {
+	SubTitle,
 	Player,
 	Title,
-	SubTitle,
 }
 
 Entity :: struct {

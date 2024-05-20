@@ -22,7 +22,6 @@ COLOR_WHITE :: SDL.Color{255, 255, 255, 255}
 game := Game {
 	window_width  = 1920,
 	window_height = 1080,
-	font_size     = 28,
 }
 
 main :: proc() {
@@ -97,11 +96,6 @@ init_sdl :: proc() {
 		os.exit(1)
 	}
 
-	game.font = SDL_TTF.OpenFont("assets/fonts/silver/Silver.ttf", game.font_size)
-	if game.font == nil {
-		fmt.eprintln("ERROR: Failed to load font: %s", SDL.GetErrorString())
-		os.exit(1)
-	}
 
 	image_init := SDL_Image.Init(SDL_Image.INIT_PNG)
 	if image_init == nil {
