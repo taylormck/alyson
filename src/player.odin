@@ -52,3 +52,34 @@ create_player :: proc(game: ^Game) -> (player: Player) {
 
 	return player
 }
+
+update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
+	gravity :: 1000.0
+	jump_power :: 1000.0
+	bottom := f32(game.window_height) - 200.0
+
+	player_horizontal_movement_input := get_axis(
+		game.input.events[.move_left].value,
+		game.input.events[.move_right].value,
+	)
+
+	player.velocity.x = player_horizontal_movement_input * player_speed
+	player.position.x += player.velocity.x * delta
+
+	if player.position.y < bottom {
+		// Improved approximation of acceleration due to gravity
+		acceleration := gravity * delta * 0.5
+		player.velocity.y += acceleration
+		player.position.y = min(player.position.y + player.velocity.y * delta, bottom)
+		player.velocity.y += acceleration
+	} else if game.input.events[.jump].is_just_pressed {
+		player.velocity.y = -jump_power
+		player.position.y -= jump_power * delta
+	} else {
+		player.velocity.y = 0
+	}
+
+	// TODO: make sprite render relative to the position
+	game.sprites[SpriteId.Player].destination.x = i32(game.player.position.x)
+	game.sprites[SpriteId.Player].destination.y = i32(game.player.position.y)
+}
