@@ -6,14 +6,14 @@ import SDL "vendor:sdl2"
 // determines the draw order. We should eventually switch to
 // something a bit more sane, eventually.
 SpriteId :: enum {
-	SubTitle,
-	Player,
-	Title,
+    SubTitle,
+    Player,
+    Title,
 }
 
-Sprite :: struct {
-	destination: SDL.Rect,
-	source:      SDL.Rect,
-	texture:     ^SDL.Texture,
-	position:    Vec2,
+Entity :: struct {
+    destination: SDL.Rect,
+    source:      SDL.Rect,
+    texture:     ^SDL.Texture,
+    position:    Vec2,
 }
