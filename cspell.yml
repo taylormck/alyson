@@ -13,8 +13,6 @@ dictionaries:
   - en_US
 
 ignorePaths:
-  - 'build'
   - './project-words.txt'
   - ./.*
-  - xmake.lua
 
