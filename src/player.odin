@@ -49,8 +49,8 @@ create_player :: proc(game: ^Game) -> (player: Player) {
     player.sprite.destination = SDL.Rect {
         x = 0,
         y = 0,
-        w = 200,
-        h = 200,
+        w = 50,
+        h = 50,
     }
 
     // TODO: adapt sprite position to be relative to parent
@@ -60,9 +60,12 @@ create_player :: proc(game: ^Game) -> (player: Player) {
 }
 
 update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
+    // TODO: calculate these based on player's jump height and speed
     gravity :: 1000.0
-    jump_power :: 1000.0
-    bottom := f32(game.window_height) - 200.0
+    jump_power :: 750.0
+
+    // TODO: replace this with collisions
+    bottom := f32(game.window_height - player.sprite.destination.h)
 
     player_horizontal_movement_input := get_axis(
         game.input.events[.move_left].value,

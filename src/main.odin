@@ -20,8 +20,8 @@ COLOR_WHITE :: SDL.Color{255, 255, 255, 255}
 // This will serve as a way to access our singleton-like objects,
 // such as the renderer, the audio server, etc.
 game := Game {
-    window_width  = 1920,
-    window_height = 1080,
+    window_width  = 480,
+    window_height = 360,
 }
 
 main :: proc() {
