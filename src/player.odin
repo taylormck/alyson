@@ -63,6 +63,7 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     // TODO: calculate these based on player's jump height and speed
     gravity :: 1000.0
     jump_power :: 750.0
+    falling_gravity_multiplier :: 3.0
 
     // TODO: replace this with collisions
     bottom := f32(game.window_height - player.sprite.destination.h)
@@ -75,9 +76,24 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     player.velocity.x = player_horizontal_movement_input * max_player_speed
     player.position.x += player.velocity.x * delta
 
+    // If the player somehow ends up below the bottom of the screen,
+    // go ahead and just move them back up to the bototm of the screen.
+    if player.position.y > bottom {
+        player.position.y = bottom
+    }
+
     if player.position.y < bottom {
+        gravity_multiplier: f32 = 1.0
+
+        // Increase gravity while falling.
+        // This can happen either after the player reaches the peak of
+        // their jump, or after they let go of the jump button.
+        if player.velocity.y > 0 || !game.input.events[.jump].is_pressed {
+            gravity_multiplier = falling_gravity_multiplier
+        }
+
         // Improved approximation of acceleration due to gravity
-        acceleration := gravity * delta * 0.5
+        acceleration := gravity * gravity_multiplier * delta * 0.5
         player.velocity.y += acceleration
         player.position.y = min(
             player.position.y + player.velocity.y * delta,

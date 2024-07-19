@@ -108,7 +108,6 @@ init_sdl :: proc() {
         os.exit(1)
     }
 
-
     image_init := SDL_Image.Init(SDL_Image.INIT_PNG)
     if image_init == nil {
         fmt.eprintln(

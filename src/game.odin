@@ -90,13 +90,11 @@ create_text :: proc(
     // We return destination and source rects that match here.
     // The caller should feel free to edit the destination rect, but leave
     // the source rect alone.
-    return(
-        Sprite {
-            texture = texture,
-            destination = dest_rect,
-            source = dest_rect,
-        } \
-    )
+    return (Sprite {
+                texture = texture,
+                destination = dest_rect,
+                source = dest_rect,
+            })
 }
 
 
