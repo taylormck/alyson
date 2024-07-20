@@ -61,9 +61,10 @@ create_player :: proc(game: ^Game) -> (player: Player) {
 
 update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     // TODO: calculate these based on player's jump height and speed
-    gravity :: 1000.0
-    jump_power :: 750.0
+    gravity :: 1_000.0
+    jump_power :: 500.0
     falling_gravity_multiplier :: 3.0
+    max_gravity :: 1_000.0
 
     // TODO: replace this with collisions
     bottom := f32(game.window_height - player.sprite.destination.h)
@@ -73,14 +74,9 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         game.input.events[.move_right].value,
     )
 
+    // TODO: add movement acceleration
     player.velocity.x = player_horizontal_movement_input * max_player_speed
     player.position.x += player.velocity.x * delta
-
-    // If the player somehow ends up below the bottom of the screen,
-    // go ahead and just move them back up to the bototm of the screen.
-    if player.position.y > bottom {
-        player.position.y = bottom
-    }
 
     if player.position.y < bottom {
         gravity_multiplier: f32 = 1.0
@@ -90,21 +86,26 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         // their jump, or after they let go of the jump button.
         if player.velocity.y > 0 || !game.input.events[.jump].is_pressed {
             gravity_multiplier = falling_gravity_multiplier
+        } else if player.velocity.y < -5 {
+            // Decrease gravity at the top of the jump to give players
+            // a bit of hang time.
+            gravity_multiplier = 0.75
         }
 
         // Improved approximation of acceleration due to gravity
         acceleration := gravity * gravity_multiplier * delta * 0.5
-        player.velocity.y += acceleration
+        player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
         player.position.y = min(
             player.position.y + player.velocity.y * delta,
             bottom,
         )
-        player.velocity.y += acceleration
+        player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
     } else if game.input.events[.jump].is_just_pressed {
         player.velocity.y = -jump_power
         player.position.y -= jump_power * delta
     } else {
         player.velocity.y = 0
+        player.position.y = bottom
     }
 
     // TODO: make sprite render relative to the position
