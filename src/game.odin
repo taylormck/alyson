@@ -113,3 +113,14 @@ create_text_sprites :: proc(game: ^Game) {
     game.sprites[SpriteId.Title] = title
     game.sprites[SpriteId.SubTitle] = sub_title
 }
+
+resize_game_window :: proc(
+    game: ^Game,
+    new_window_width: i32,
+    new_window_height: i32,
+) {
+    game.window_width = new_window_width
+    game.window_height = new_window_height
+
+    create_text_sprites(game)
+}

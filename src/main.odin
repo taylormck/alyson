@@ -130,8 +130,7 @@ handle_events :: proc(event: ^SDL.Event) {
     if event.type == SDL.EventType.WINDOWEVENT &&
        event.window.windowID == SDL.GetWindowID(game.window) &&
        event.window.event == SDL.WindowEventID.RESIZED {
-        game.window_width = event.window.data1
-        game.window_height = event.window.data2
+        resize_game_window(&game, event.window.data1, event.window.data2)
 
         // TODO: rescale the game to match the new window size
     }
