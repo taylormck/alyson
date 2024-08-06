@@ -6,7 +6,7 @@ import SDL "vendor:sdl2"
 import SDL_Image "vendor:sdl2/image"
 
 // TODO: Read this from a data file
-max_player_speed :: 300.0
+MAX_PLAYER_SPEED :: 300.0
 
 Player :: struct {
     sprite:   Sprite,
@@ -75,7 +75,7 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     )
 
     // TODO: add movement acceleration
-    player.velocity.x = player_horizontal_movement_input * max_player_speed
+    player.velocity.x = player_horizontal_movement_input * MAX_PLAYER_SPEED
     player.position.x += player.velocity.x * delta
 
     if player.position.y < bottom {
