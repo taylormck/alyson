@@ -78,6 +78,12 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     player.velocity.x = player_horizontal_movement_input * MAX_PLAYER_SPEED
     player.position.x += player.velocity.x * delta
 
+    player.position.x = clamp(
+        player.position.x,
+        0,
+        f32(game.window_width - player.sprite.destination.w),
+    )
+
     if player.position.y < bottom {
         gravity_multiplier: f32 = 1.0
 
