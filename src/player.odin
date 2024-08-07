@@ -7,12 +7,16 @@ import SDL_Image "vendor:sdl2/image"
 
 // TODO: Read this from a data file
 MAX_PLAYER_SPEED :: 300.0
+JUMP_QUEUE_TIMER :: 0.1
 
 Player :: struct {
-    sprite:   Sprite,
-    position: Vec2,
-    velocity: Vec2,
+    sprite:           Sprite,
+    position:         Vec2,
+    velocity:         Vec2,
+    jump_queued_time: f32,
 }
+
+jump_queue_timout :: 0.1
 
 create_player :: proc(game: ^Game) -> (player: Player) {
     TEXTURE_PATH :: "assets/sprites/cat.png"
@@ -106,7 +110,14 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
             bottom,
         )
         player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
-    } else if game.input.events[.jump].is_just_pressed {
+
+        if game.input.events[.jump].is_just_pressed {
+            player.jump_queued_time = jump_queue_timout
+        } else if player.jump_queued_time > 0 {
+            player.jump_queued_time = player.jump_queued_time - delta
+        }
+    } else if game.input.events[.jump].is_just_pressed ||
+       player.jump_queued_time > 0 {
         player.velocity.y = -jump_power
         player.position.y -= jump_power * delta
     } else {
