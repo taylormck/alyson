@@ -16,7 +16,7 @@ Player :: struct {
     jump_queued_time: f32,
 }
 
-jump_queue_timout :: 0.1
+jump_queue_timeout :: 0.1
 
 create_player :: proc(game: ^Game) -> (player: Player) {
     TEXTURE_PATH :: "assets/sprites/cat.png"
@@ -112,7 +112,7 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
 
         if game.input.events[.jump].is_just_pressed {
-            player.jump_queued_time = jump_queue_timout
+            player.jump_queued_time = jump_queue_timeout
         } else if player.jump_queued_time > 0 {
             player.jump_queued_time = player.jump_queued_time - delta
         }
