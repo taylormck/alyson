@@ -7,6 +7,15 @@ import SDL_Image "vendor:sdl2/image"
 
 // TODO: Read this from a data file
 MAX_PLAYER_SPEED :: 300.0
+MAX_PLAYER_JUMP_HEIGHT :: 150.0
+MAX_PLAYER_JUMP_DISTANCE :: 100.0
+
+INITIAL_JUMP_VELOCITY ::
+    (2 * MAX_PLAYER_JUMP_HEIGHT * MAX_PLAYER_SPEED) / MAX_PLAYER_JUMP_DISTANCE
+PLAYER_GRAVITY ::
+    (2 * MAX_PLAYER_JUMP_HEIGHT * MAX_PLAYER_SPEED * MAX_PLAYER_SPEED) /
+    (MAX_PLAYER_JUMP_DISTANCE * MAX_PLAYER_JUMP_DISTANCE)
+
 JUMP_QUEUE_TIMER :: 0.1
 
 Player :: struct {
@@ -63,12 +72,19 @@ create_player :: proc(game: ^Game) -> (player: Player) {
     return player
 }
 
+/*
+ * v0 = jump force || initial jump vertical velocity
+ * g = gravity
+ *
+ * h = maximum jump height
+ * xh = maximum jump distance
+ * vx = maximum vertical velocity
+ */
+
 update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
-    // TODO: calculate these based on player's jump height and speed
-    gravity :: 1_000.0
-    jump_power :: 500.0
-    falling_gravity_multiplier :: 3.0
+    // TODO: move these out to constant
     max_gravity :: 1_000.0
+    falling_gravity_multiplier :: 3.0
 
     // TODO: replace this with collisions
     bottom := f32(game.window_height - player.sprite.destination.h)
@@ -103,7 +119,7 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         }
 
         // Improved approximation of acceleration due to gravity
-        acceleration := gravity * gravity_multiplier * delta * 0.5
+        acceleration := PLAYER_GRAVITY * gravity_multiplier * delta * 0.5
         player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
         player.position.y = min(
             player.position.y + player.velocity.y * delta,
@@ -118,8 +134,8 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         }
     } else if game.input.events[.jump].is_just_pressed ||
        player.jump_queued_time > 0 {
-        player.velocity.y = -jump_power
-        player.position.y -= jump_power * delta
+        player.velocity.y = -INITIAL_JUMP_VELOCITY
+        player.position.y -= INITIAL_JUMP_VELOCITY * delta
     } else {
         player.velocity.y = 0
         player.position.y = bottom
