@@ -16,16 +16,43 @@ PLAYER_GRAVITY ::
     (2 * MAX_PLAYER_JUMP_HEIGHT * MAX_PLAYER_SPEED * MAX_PLAYER_SPEED) /
     (MAX_PLAYER_JUMP_DISTANCE * MAX_PLAYER_JUMP_DISTANCE)
 
-JUMP_QUEUE_TIMER :: 0.1
+JUMP_QUEUE_TIMEOUT :: 0.1
 
 Player :: struct {
-    sprite:           Sprite,
-    position:         Vec2,
-    velocity:         Vec2,
-    jump_queued_time: f32,
+    sprite:            Sprite,
+    position:          Vec2,
+    velocity:          Vec2,
+    jump_queued_time:  f32,
+    current_animation: Animation,
+    animation_time:    f32,
 }
 
-jump_queue_timeout :: 0.1
+Animation :: enum {
+    Idle,
+}
+
+AnimationFrame :: struct {
+    duration:   f32,
+    dimensions: SDL.Rect,
+}
+
+animation_frames := [Animation][]AnimationFrame {
+    .Idle = {
+        {duration = 1.0, dimensions = SDL.Rect{x = 7, y = 16, w = 16, h = 16}},
+        {
+            duration = 1.0,
+            dimensions = SDL.Rect{x = 39, y = 16, w = 16, h = 16},
+        },
+        {
+            duration = 1.0,
+            dimensions = SDL.Rect{x = 72, y = 16, w = 16, h = 16},
+        },
+        {
+            duration = 1.0,
+            dimensions = SDL.Rect{x = 39, y = 16, w = 16, h = 16},
+        },
+    },
+}
 
 create_player :: proc(game: ^Game) -> (player: Player) {
     TEXTURE_PATH :: "assets/sprites/cat.png"
@@ -42,23 +69,8 @@ create_player :: proc(game: ^Game) -> (player: Player) {
     player.position = Vec2{20.0, f32(game.window_height) / 2 - 100}
     player.velocity = Vec2{0.0, -100.0}
     player.sprite.texture = texture
+    player.current_animation = .Idle
 
-    horizontal_padding: i32 = 7
-    vertical_padding: i32 = 16
-
-    horizontal_size: i32 = 16
-    vertical_size: i32 = 16
-
-
-    // TODO: adjust the source over time to animate the sprite
-    player.sprite.source = SDL.Rect {
-        x = horizontal_padding,
-        y = vertical_padding,
-        w = horizontal_size,
-        h = vertical_size,
-    }
-
-    // TODO: reduce the destination size to make the cat smaller later
     player.sprite.destination = SDL.Rect {
         x = 0,
         y = 0,
@@ -128,7 +140,7 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         player.velocity.y = min(player.velocity.y + acceleration, max_gravity)
 
         if game.input.events[.jump].is_just_pressed {
-            player.jump_queued_time = jump_queue_timeout
+            player.jump_queued_time = JUMP_QUEUE_TIMEOUT
         } else if player.jump_queued_time > 0 {
             player.jump_queued_time = player.jump_queued_time - delta
         }
@@ -140,6 +152,29 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
         player.velocity.y = 0
         player.position.y = bottom
     }
+
+    player.animation_time += delta
+    remaining_time := player.animation_time
+    current_frame_index := 0
+    current_animation_frames := animation_frames[player.current_animation]
+
+    for remaining_time > 0 {
+        duration := current_animation_frames[current_frame_index].duration
+        remaining_time -= duration
+        current_frame_index += 1
+
+        if current_frame_index >= len(&current_animation_frames) {
+            current_frame_index = 0
+
+            // TODO: we need to update player.
+        }
+    }
+
+    player.sprite.source =
+        current_animation_frames[current_frame_index].dimensions
+
+    // TODO: refactor so that we don't have to set this twice
+    game.sprites[SpriteId.Player].source = player.sprite.source
 
     // TODO: make sprite render relative to the position
     game.sprites[SpriteId.Player].destination.x = i32(game.player.position.x)
