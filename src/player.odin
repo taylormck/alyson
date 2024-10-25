@@ -157,16 +157,18 @@ update_player :: proc(player: ^Player, game: ^Game, delta: f32) {
     remaining_time := player.animation_time
     current_frame_index := 0
     current_animation_frames := animation_frames[player.current_animation]
+    current_animation_duration: f32 = 0
 
     for remaining_time > 0 {
         duration := current_animation_frames[current_frame_index].duration
         remaining_time -= duration
+        current_animation_duration += duration
         current_frame_index += 1
 
         if current_frame_index >= len(&current_animation_frames) {
+            player.animation_time -= current_animation_duration
+            current_animation_duration = 0
             current_frame_index = 0
-
-            // TODO: we need to update player.
         }
     }
 
